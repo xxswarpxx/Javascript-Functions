@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numeric Input Validator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: inline-block;
+            width: 120px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            padding: 5px;
+            width: 200px;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+            margin-left: 125px;
+            margin-top: 5px;
+        }
+        button {
+            padding: 8px 16px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        .success {
+            color: green;
+            margin-left: 125px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Numeric Value Validator</h2>
+    <p>Enter a number (integer or decimal, negative allowed) in the field below.</p>
+
+    <form id="testForm" onsubmit="return validateForm(event)">
+        <div class="form-group">
+            <label for="numberInput">Number:</label>
+            <input type="text" id="numberInput" name="numberInput" placeholder="e.g. 42 or -3.14">
+            <div id="errorMsg" class="error"></div>
+        </div>
+        <div class="form-group">
+            <button type="submit">Submit</button>
+            <button type="button" onclick="clearValidation()">Clear</button>
+        </div>
+        <div id="successMsg" class="success"></div>
+    </form>
+
+    <script>
+        /**
+         * Core validation function: checks if a string represents a valid numeric value.
+         * @param {string} str - The input string to test.
+         * @returns {boolean} - True if the string is a non-empty, finite number.
+         */
+        function isNumeric(str) {
+            if (typeof str !== 'string') return false;      // ensure we're working with a string
+            const trimmed = str.trim();
+            if (trimmed === '') return false;                // empty or whitespace only is not a number
+            // Use Number() to convert; it returns NaN for invalid numbers
+            // Number('') would return 0, but we already handled empty string.
+            return !isNaN(Number(trimmed)) && isFinite(Number(trimmed));
+        }
+
+        /**
+         * Validates the textbox and updates the error/success messages.
+         * @returns {boolean} - True if the input is numeric, false otherwise.
+         */
+        function validateNumberInput() {
+            const inputField = document.getElementById('numberInput');
+            const errorDiv = document.getElementById('errorMsg');
+            const successDiv = document.getElementById('successMsg');
+            const value = inputField.value;
+
+            if (isNumeric(value)) {
+                errorDiv.textContent = '';                     // clear any previous error
+                successDiv.textContent = '? Valid number!';
+                return true;
+            } else {
+                errorDiv.textContent = 'Please enter a valid numeric value (e.g., 123, -45.67).';
+                successDiv.textContent = '';                   // clear success message
+                return false;
+            }
+        }
+
+        /**
+         * Form submit handler – validates before allowing submission.
+         * @param {Event} event - The submit event.
+         * @returns {boolean} - False if validation fails, preventing submission.
+         */
+        function validateForm(event) {
+            event.preventDefault();        // prevent actual form submission for this demo
+            if (validateNumberInput()) {
+                alert('Form submitted (demo) with valid number: ' + document.getElementById('numberInput').value);
+                return true;                // would allow submission in a real scenario
+            } else {
+                alert('Please correct the error before submitting.');
+                return false;
+            }
+        }
+
+        /**
+         * Clears the input field and all messages.
+         */
+        function clearValidation() {
+            document.getElementById('numberInput').value = '';
+            document.getElementById('errorMsg').textContent = '';
+            document.getElementById('successMsg').textContent = '';
+        }
+
+        // Optional: real-time validation as the user types (on input event)
+        document.getElementById('numberInput').addEventListener('input', function() {
+            // You can choose to show feedback immediately; here we update the error/success messages.
+            validateNumberInput();
+        });
+    </script>
+</body>
+</html>
