@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flexible Date Parser with Custom Output Format</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: inline-block;
+            width: 200px;
+            font-weight: bold;
+        }
+        input[type="text"], select {
+            padding: 5px;
+            width: 250px;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+            margin-left: 205px;
+            margin-top: 5px;
+        }
+        .success {
+            color: green;
+            margin-left: 205px;
+            margin-top: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Smart Date Parser</h2>
+    <p>Enter a date in any common format (e.g., 12/25/2023, 25-12-2023, 2023.12.25).</p>
+    <p>The function will parse it and reformat it according to your chosen output format.</p>
+
+    <form id="dateForm" onsubmit="return handleSubmit(event)">
+        <div class="form-group">
+            <label for="dateInput">Date input:</label>
+            <input type="text" id="dateInput" placeholder="e.g. 12/25/2023 or 25 Dec 2023">
+        </div>
+        <div class="form-group">
+            <label for="outputFormat">Output format:</label>
+            <select id="outputFormat">
+                <option value="YYYY-MM-DD" selected>YYYY-MM-DD</option>
+                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                <option value="MMMM D, YYYY">MMMM D, YYYY (e.g. January 5, 2023)</option>
+                <option value="DD MMM YYYY">DD MMM YYYY (e.g. 05 Jan 2023)</option>
+                <option value="YYYY/MM/DD">YYYY/MM/DD</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <button type="submit">Validate & Format</button>
+            <button type="button" onclick="clearAll()">Clear</button>
+        </div>
+        <div id="errorMsg" class="error"></div>
+        <div id="successMsg" class="success"></div>
+    </form>
+
+    <script>
+        /**
+         * Parses a date string using a list of common patterns.
+         * Supports numeric dates with separators / - . and also named months (Jan, January, etc.).
+         * Returns a Date object (UTC midnight) if valid, otherwise null.
+         */
+        function parseDateFlexible(input) {
+            if (typeof input !== 'string') return null;
+            input = input.trim();
+            if (input === '') return null;
+
+            // 1. Try the built-in Date parser (works for ISO 8601 and some other formats)
+            let date = new Date(input);
+            if (!isNaN(date)) {
+                // Check if the parsed date is reasonable (e.g., not 0001-01-01 for "abcd")
+                // Also ensure it's not a date from a partial match like "123" -> "2001-01-01"? No.
+                // We'll rely on the fact that Date.parse returns a number; if it's NaN, it's invalid.
+                // But Date.parse("12/25/2023") works in most browsers as mm/dd/yyyy.
+                // However, it's ambiguous. We'll use it as a fallback, but better to use explicit patterns.
+                // We'll still prefer our pattern matching for consistency.
+            }
+
+            // 2. Define patterns in order of likelihood. Each pattern has:
+            //    - regex to capture groups
+            //    - mapping of captured groups to {year, month, day}
+            //    - note: month is 1-indexed in the input
+            const patterns = [
+                // MM/DD/YYYY or MM-DD-YYYY or MM.DD.YYYY
+                { regex: /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/, order: ['month', 'day', 'year'] },
+                // DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
+                { regex: /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/, order: ['day', 'month', 'year'] },
+                // YYYY/MM/DD or YYYY-MM-DD or YYYY.MM.DD
+                { regex: /^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/, order: ['year', 'month', 'day'] },
+                // Named months: e.g., "Jan 5, 2023" or "5 January 2023"
+                { regex: /^(\d{1,2})\s+([a-zA-Z]+)[,\s]*(\d{4})$/, order: ['day', 'monthName', 'year'] },
+                { regex: /^([a-zA-Z]+)\s+(\d{1,2})[,\s]*(\d{4})$/, order: ['monthName', 'day', 'year'] },
+                // Month name first, with or without day: "January 2023" (assumes first day)
+                { regex: /^([a-zA-Z]+)[,\s]*(\d{4})$/, order: ['monthName', 'year'], defaultDay: 1 },
+                // Just "2023" (year only) – not a full date, but we could default to Jan 1
+                // { regex: /^(\d{4})$/, order: ['year'], defaultMonth: 1, defaultDay: 1 }
+            ];
+
+            // Helper to convert month name to number (1-12)
+            const monthNames = {
+                jan:1, january:1, feb:2, february:2, mar:3, march:3, apr:4, april:4,
+                may:5, jun:6, june:6, jul:7, july:7, aug:8, august:8, sep:9, sept:9, september:9,
+                oct:10, october:10, nov:11, november:11, dec:12, december:12
+            };
+
+            for (let pattern of patterns) {
+                const match = input.match(pattern.regex);
+                if (!match) continue;
+
+                let year, month, day;
+                const groups = match.slice(1); // captured groups
+                const order = pattern.order;
+
+                // Fill defaults if any missing
+                for (let i = 0; i < order.length; i++) {
+                    const token = order[i];
+                    const value = groups[i];
+                    if (token === 'year') year = parseInt(value, 10);
+                    else if (token === 'month') month = parseInt(value, 10);
+                    else if (token === 'day') day = parseInt(value, 10);
+                    else if (token === 'monthName') {
+                        const monthNum = monthNames[value.trim().toLowerCase()];
+                        if (!monthNum) break; // invalid month name
+                        month = monthNum;
+                    }
+                }
+
+                // Apply defaults if defined
+                if (pattern.defaultDay && day === undefined) day = pattern.defaultDay;
+                if (pattern.defaultMonth && month === undefined) month = pattern.defaultMonth;
+
+                // If we have all three, validate
+                if (year && month && day) {
+                    // Basic sanity
+                    if (month < 1 || month > 12) continue;
+                    if (year < 1000 || year > 9999) continue; // reasonable 4-digit year
+                    // Use UTC to avoid timezone issues
+                    const date = new Date(Date.UTC(year, month - 1, day));
+                    if (date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day) {
+                        return date; // valid
+                    }
+                }
+            }
+
+            // 3. Fallback: try JavaScript's Date.parse for formats not covered (e.g., "2023-12-25T00:00")
+            // But we must be careful because it's implementation-dependent.
+            date = new Date(input);
+            if (!isNaN(date) && date.getFullYear() > 1000) { // crude check
+                return date;
+            }
+
+            return null;
+        }
+
+        /**
+         * Formats a Date object according to a developer-specified pattern.
+         * Tokens: YYYY, MM, MMM, MMMM, DD, D, etc. (simple implementation)
+         */
+        function formatDate(date, format) {
+            if (!(date instanceof Date) || isNaN(date)) return null;
+
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1; // 1-12
+            const day = date.getDate();
+
+            const monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthNamesLong = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+            // Replace tokens in order (longest first to avoid partial replacements)
+            const replacements = [
+                { token: 'YYYY', value: year.toString().padStart(4, '0') },
+                { token: 'MM', value: month.toString().padStart(2, '0') },
+                { token: 'M', value: month.toString() },
+                { token: 'DD', value: day.toString().padStart(2, '0') },
+                { token: 'D', value: day.toString() },
+                { token: 'MMMM', value: monthNamesLong[month - 1] },
+                { token: 'MMM', value: monthNamesShort[month - 1] }
+            ];
+
+            let result = format;
+            for (let r of replacements) {
+                result = result.split(r.token).join(r.value);
+            }
+            return result;
+        }
+
+        /**
+         * Main validation & formatting function.
+         * Returns formatted string if valid, otherwise null.
+         */
+        function validateAndFormat(input, outputFormat) {
+            const date = parseDateFlexible(input);
+            if (!date) return null;
+            return formatDate(date, outputFormat);
+        }
+
+        // ----- Demo UI -----
+        function processInput() {
+            const inputField = document.getElementById('dateInput');
+            const outputSelect = document.getElementById('outputFormat');
+            const errorDiv = document.getElementById('errorMsg');
+            const successDiv = document.getElementById('successMsg');
+
+            const inputValue = inputField.value;
+            const outputFormat = outputSelect.value;
+
+            const formatted = validateAndFormat(inputValue, outputFormat);
+
+            if (formatted) {
+                errorDiv.textContent = '';
+                successDiv.textContent = `? Valid date: ${formatted}`;
+                return true;
+            } else {
+                errorDiv.textContent = '? Could not parse as a valid date.';
+                successDiv.textContent = '';
+                return false;
+            }
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            if (processInput()) {
+                alert(`Success! Formatted date: ${document.getElementById('successMsg').textContent.replace('? Valid date: ', '')}`);
+            } else {
+                alert('Please enter a valid date.');
+            }
+            return false;
+        }
+
+        function clearAll() {
+            document.getElementById('dateInput').value = '';
+            document.getElementById('errorMsg').textContent = '';
+            document.getElementById('successMsg').textContent = '';
+        }
+
+        // Optional real-time validation
+        document.getElementById('dateInput').addEventListener('input', processInput);
+        document.getElementById('outputFormat').addEventListener('change', processInput);
+    </script>
+</body>
+</html>
