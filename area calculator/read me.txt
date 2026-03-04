@@ -1,0 +1,2 @@
+This application developed in javascript lets you calculate the area for all main geometric shapes and it makes a scaled drawing representing the data input
+Most updated version is version 13
