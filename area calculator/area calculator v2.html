@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometric area · complete pack (2 decimals)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: linear-gradient(145deg, #f5f7fc 0%, #e9ecf5 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+        .card {
+            max-width: 1100px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 20, 40, 0.35), inset 0 1px 2px rgba(255,255,255,0.6);
+            padding: 2rem 2rem 2.5rem;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        h1 {
+            font-weight: 600;
+            font-size: 2.1rem;
+            letter-spacing: -0.02em;
+            color: #1a2639;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 0.35rem;
+        }
+        h1 span {
+            background: #2d3b5a;
+            color: white;
+            font-size: 0.9rem;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+        .sub {
+            color: #3e4e6b;
+            margin-bottom: 2rem;
+            font-weight: 300;
+            font-size: 1.1rem;
+            border-left: 4px solid #5b7eb9;
+            padding-left: 1rem;
+        }
+        .main-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+        .controls {
+            flex: 1.2;
+            min-width: 280px;
+        }
+        .visual-panel {
+            flex: 1.8;
+            min-width: 320px;
+            background: #f8faffcc;
+            border-radius: 2rem;
+            padding: 1.5rem 1.5rem 1.8rem;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.02), 0 8px 18px rgba(45,60,90,0.1);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.7);
+        }
+        .shape-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background: #eef2f8;
+            padding: 1rem 1.2rem;
+            border-radius: 3rem;
+        }
+        .shape-btn {
+            background: transparent;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 3rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #2b3a55;
+            cursor: pointer;
+            transition: 0.15s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            flex: 0 1 auto;
+        }
+        .shape-btn:hover {
+            background: #d9e2f0;
+            color: #0c1a2b;
+        }
+        .shape-btn.active {
+            background: #2d3b5a;
+            color: white;
+            box-shadow: 0 8px 14px -8px #1f2b40;
+        }
+        .param-area {
+            background: #eef3fc;
+            border-radius: 2rem;
+            padding: 1.8rem 1.5rem;
+            margin-bottom: 1.8rem;
+        }
+        .param-title {
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: #14273e;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .param-title i {
+            font-style: normal;
+            font-size: 1.4rem;
+        }
+        .input-group {
+            margin-bottom: 1.4rem;
+        }
+        .input-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-weight: 500;
+            color: #1f3147;
+            margin-bottom: 0.4rem;
+        }
+        .input-group label span {
+            background: #b7cef0;
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #102031;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 0.9rem 1.2rem;
+            font-size: 1rem;
+            background: white;
+            border: 2px solid transparent;
+            border-radius: 1.5rem;
+            outline: none;
+            transition: 0.15s;
+            box-shadow: 0 4px 8px rgba(0, 10, 30, 0.05);
+        }
+        .input-group input:focus {
+            border-color: #5b7eb9;
+            box-shadow: 0 8px 16px -8px #2c4b7c;
+        }
+        .action-btn {
+            background: #1f2c41;
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 1.2rem;
+            padding: 1rem 2rem;
+            border-radius: 3rem;
+            width: 100%;
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 0.3px;
+            box-shadow: 0 8px 18px -6px #0f1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .action-btn:hover {
+            background: #2b3d60;
+            transform: scale(1.01);
+        }
+        .result-box {
+            margin-top: 2rem;
+            background: #dce6f5;
+            border-radius: 2rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .result-box .area-num {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #0c1b33;
+            line-height: 1.2;
+        }
+        .result-box .area-unit {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #3b5075;
+            letter-spacing: 1px;
+        }
+        .result-box small {
+            color: #2d4a72;
+        }
+
+        /* visual canvas */
+        .canvas-container {
+            background: #ffffffd9;
+            border-radius: 1.5rem;
+            padding: 1rem;
+            box-shadow: inset 0 1px 6px #0000000c, 0 6px 12px #0000001a;
+            margin-bottom: 1.2rem;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            touch-action: none;
+        }
+        .param-visual-ref {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            background: #e5edfa;
+            border-radius: 1.5rem;
+            padding: 1rem 0.8rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #142d4f;
+        }
+        .param-visual-ref div {
+            background: #cddefa;
+            padding: 0.3rem 1.2rem;
+            border-radius: 3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .param-visual-ref i {
+            font-style: normal;
+            background: #2b3b5c;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        .footer-note {
+            margin-top: 1.2rem;
+            text-align: right;
+            color: #4a6185;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>📐 shape·area <span>8 shapes · 2 decimals</span></h1>
+    <div class="sub">square · rectangle · circle · triangle · parallelogram · ellipse · trapezoid · semi‑circle</div>
+
+    <div class="main-panel">
+        <!-- LEFT: controls -->
+        <div class="controls">
+            <div class="shape-selector" id="shapeSelector">
+                <button class="shape-btn active" data-shape="square">⬛ square</button>
+                <button class="shape-btn" data-shape="rectangle">▭ rectangle</button>
+                <button class="shape-btn" data-shape="circle">⚪ circle</button>
+                <button class="shape-btn" data-shape="triangle">🔺 triangle</button>
+                <button class="shape-btn" data-shape="parallelogram">🔷 parallelogram</button>
+                <button class="shape-btn" data-shape="ellipse">🥚 ellipse</button>
+                <button class="shape-btn" data-shape="trapezoid">📐 trapezoid</button>
+                <button class="shape-btn" data-shape="semicircle">🌓 semi‑circle</button>
+            </div>
+
+            <div class="param-area" id="paramArea">
+                <!-- dynamic form injected by js -->
+            </div>
+
+            <button class="action-btn" id="calculateBtn">🧮 calculate & draw (2 decimals)</button>
+
+            <div class="result-box" id="resultBox">
+                <div class="area-num" id="areaValue">0.00</div>
+                <div class="area-unit">square units</div>
+                <small>result with two decimals</small>
+            </div>
+        </div>
+
+        <!-- RIGHT: visual + reference -->
+        <div class="visual-panel">
+            <div class="canvas-container">
+                <canvas id="shapeCanvas" width="420" height="280"></canvas>
+            </div>
+            <div class="param-visual-ref" id="visualParamRef">
+                <div>👆 enter values to see visual</div>
+            </div>
+            <div class="footer-note">
+                ⚡ scaled to fit · parameters labelled · 2 decimals
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // ----- state -----
+    let currentShape = 'square';
+    // parameter values (defaults)
+    let paramValues = {
+        side: 5,
+        width: 6,
+        height: 4,
+        base: 6,
+        sideA: 5,
+        radius: 4,
+        altitude: 3.5,
+        aAxis: 5,      // ellipse semi-major
+        bAxis: 3,       // ellipse semi-minor
+        topBase: 4,     // trapezoid top base
+        bottomBase: 7,  // trapezoid bottom base
+        trapHeight: 3.5
+    };
+
+    // ----- DOM elements -----
+    const canvas = document.getElementById('shapeCanvas');
+    const ctx = canvas.getContext('2d');
+    const shapeSelector = document.getElementById('shapeSelector');
+    const paramArea = document.getElementById('paramArea');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const areaValueSpan = document.getElementById('areaValue');
+    const visualParamRef = document.getElementById('visualParamRef');
+    const shapeBtns = document.querySelectorAll('.shape-btn');
+
+    // ---- helpers ----
+    function setActiveShape(shape) {
+        currentShape = shape;
+        shapeBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.shape === shape);
+        });
+        rebuildParamForm();
+        updateVisualReference();
+        drawScaledShape();
+    }
+
+    // build input fields based on shape
+    function rebuildParamForm() {
+        let html = '';
+        const shape = currentShape;
+
+        const titles = {
+            square: '⬛ square',
+            rectangle: '▭ rectangle',
+            circle: '⚪ circle',
+            triangle: '🔺 triangle',
+            parallelogram: '🔷 parallelogram',
+            ellipse: '🥚 ellipse',
+            trapezoid: '📐 trapezoid',
+            semicircle: '🌓 semi‑circle'
+        };
+        html += `<div class="param-title"><i>📏</i> ${titles[shape] || 'parameters'}</div>`;
+
+        if (shape === 'square') {
+            html += `<div class="input-group"><label><span>s</span> side</label><input type="number" id="paramSide" step="any" min="0.1" value="${paramValues.side}"></div>`;
+        } else if (shape === 'rectangle') {
+            html += `<div class="input-group"><label><span>w</span> width</label><input type="number" id="paramWidth" step="any" min="0.1" value="${paramValues.width}"></div>
+                     <div class="input-group"><label><span>h</span> height</label><input type="number" id="paramHeight" step="any" min="0.1" value="${paramValues.height}"></div>`;
+        } else if (shape === 'circle') {
+            html += `<div class="input-group"><label><span>r</span> radius</label><input type="number" id="paramRadius" step="any" min="0.1" value="${paramValues.radius}"></div>`;
+        } else if (shape === 'triangle') {
+            html += `<div class="input-group"><label><span>b</span> base</label><input type="number" id="paramBase" step="any" min="0.1" value="${paramValues.base}"></div>
+                     <div class="input-group"><label><span>h</span> height</label><input type="number" id="paramAltitude" step="any" min="0.1" value="${paramValues.altitude}"></div>`;
+        } else if (shape === 'parallelogram') {
+            html += `<div class="input-group"><label><span>b</span> base</label><input type="number" id="paramBase" step="any" min="0.1" value="${paramValues.base}"></div>
+                     <div class="input-group"><label><span>h</span> height</label><input type="number" id="paramHeight" step="any" min="0.1" value="${paramValues.height}"></div>
+                     <div class="input-group"><label><span>a</span> side (slant/visual)</label><input type="number" id="paramSideA" step="any" min="0.1" value="${paramValues.sideA}"></div>`;
+        } else if (shape === 'ellipse') {
+            html += `<div class="input-group"><label><span>a</span> semi‑major axis</label><input type="number" id="paramAAxis" step="any" min="0.1" value="${paramValues.aAxis}"></div>
+                     <div class="input-group"><label><span>b</span> semi‑minor axis</label><input type="number" id="paramBAxis" step="any" min="0.1" value="${paramValues.bAxis}"></div>`;
+        } else if (shape === 'trapezoid') {
+            html += `<div class="input-group"><label><span>B</span> bottom base</label><input type="number" id="paramBottomBase" step="any" min="0.1" value="${paramValues.bottomBase}"></div>
+                     <div class="input-group"><label><span>t</span> top base</label><input type="number" id="paramTopBase" step="any" min="0.1" value="${paramValues.topBase}"></div>
+                     <div class="input-group"><label><span>h</span> height</label><input type="number" id="paramTrapHeight" step="any" min="0.1" value="${paramValues.trapHeight}"></div>`;
+        } else if (shape === 'semicircle') {
+            html += `<div class="input-group"><label><span>r</span> radius</label><input type="number" id="paramRadius" step="any" min="0.1" value="${paramValues.radius}"></div>`;
+        }
+
+        paramArea.innerHTML = html;
+    }
+
+    // read current values from inputs into paramValues
+    function syncParamsFromInputs() {
+        const shape = currentShape;
+        if (shape === 'square') {
+            const inp = document.getElementById('paramSide');
+            if (inp) paramValues.side = parseFloat(inp.value) || 1;
+        } else if (shape === 'rectangle') {
+            const w = document.getElementById('paramWidth');
+            const h = document.getElementById('paramHeight');
+            if (w) paramValues.width = parseFloat(w.value) || 1;
+            if (h) paramValues.height = parseFloat(h.value) || 1;
+        } else if (shape === 'circle') {
+            const r = document.getElementById('paramRadius');
+            if (r) paramValues.radius = parseFloat(r.value) || 1;
+        } else if (shape === 'triangle') {
+            const b = document.getElementById('paramBase');
+            const a = document.getElementById('paramAltitude');
+            if (b) paramValues.base = parseFloat(b.value) || 1;
+            if (a) paramValues.altitude = parseFloat(a.value) || 1;
+        } else if (shape === 'parallelogram') {
+            const b = document.getElementById('paramBase');
+            const h = document.getElementById('paramHeight');
+            const s = document.getElementById('paramSideA');
+            if (b) paramValues.base = parseFloat(b.value) || 1;
+            if (h) paramValues.height = parseFloat(h.value) || 1;
+            if (s) paramValues.sideA = parseFloat(s.value) || 1;
+        } else if (shape === 'ellipse') {
+            const a = document.getElementById('paramAAxis');
+            const b = document.getElementById('paramBAxis');
+            if (a) paramValues.aAxis = parseFloat(a.value) || 1;
+            if (b) paramValues.bAxis = parseFloat(b.value) || 1;
+        } else if (shape === 'trapezoid') {
+            const bot = document.getElementById('paramBottomBase');
+            const top = document.getElementById('paramTopBase');
+            const h = document.getElementById('paramTrapHeight');
+            if (bot) paramValues.bottomBase = parseFloat(bot.value) || 1;
+            if (top) paramValues.topBase = parseFloat(top.value) || 1;
+            if (h) paramValues.trapHeight = parseFloat(h.value) || 1;
+        } else if (shape === 'semicircle') {
+            const r = document.getElementById('paramRadius');
+            if (r) paramValues.radius = parseFloat(r.value) || 1;
+        }
+    }
+
+    // compute area (returns number)
+    function computeArea() {
+        syncParamsFromInputs();
+        const shape = currentShape;
+
+        if (shape === 'square') {
+            let s = paramValues.side;
+            return s * s;
+        } else if (shape === 'rectangle') {
+            return paramValues.width * paramValues.height;
+        } else if (shape === 'circle') {
+            return Math.PI * paramValues.radius * paramValues.radius;
+        } else if (shape === 'triangle') {
+            return 0.5 * paramValues.base * paramValues.altitude;
+        } else if (shape === 'parallelogram') {
+            return paramValues.base * paramValues.height;
+        } else if (shape === 'ellipse') {
+            return Math.PI * paramValues.aAxis * paramValues.bAxis;
+        } else if (shape === 'trapezoid') {
+            return 0.5 * (paramValues.topBase + paramValues.bottomBase) * paramValues.trapHeight;
+        } else if (shape === 'semicircle') {
+            return 0.5 * Math.PI * paramValues.radius * paramValues.radius;
+        }
+        return 0;
+    }
+
+    // update result with 2 decimals
+    function updateResult() {
+        let area = computeArea();
+        areaValueSpan.innerText = area.toFixed(2);
+    }
+
+    // draw scaled shape with labels
+    function drawScaledShape() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const shape = currentShape;
+        syncParamsFromInputs();
+
+        const w = canvas.width, h = canvas.height;
+        const pad = 30;
+        const innerW = w - 2 * pad;
+        const innerH = h - 2 * pad;
+
+        ctx.save();
+        ctx.translate(pad, pad);
+        ctx.strokeStyle = '#1f3a5f';
+        ctx.lineWidth = 3;
+        ctx.fillStyle = '#b3cef7a0';
+        ctx.font = 'bold 13px "Segoe UI", monospace';
+        ctx.fillStyle = '#102a44';
+        ctx.textAlign = 'center';
+
+        function drawParamLabel(x, y, text, offsetX = 0, offsetY = -8) {
+            ctx.save();
+            ctx.font = 'bold 14px "Segoe UI"';
+            ctx.fillStyle = '#0b2542';
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 4;
+            ctx.fillText(text, x + offsetX, y + offsetY);
+            ctx.restore();
+        }
+
+        // drawing per shape
+        if (shape === 'square') {
+            let side = paramValues.side;
+            let scale = Math.min(innerW / side, innerH / side) * 0.8;
+            let drawSize = side * scale;
+            let startX = (innerW - drawSize) / 2;
+            let startY = (innerH - drawSize) / 2;
+            ctx.strokeRect(startX, startY, drawSize, drawSize);
+            ctx.fillRect(startX, startY, drawSize, drawSize);
+            drawParamLabel(startX + drawSize/2, startY - 8, `s = ${paramValues.side.toFixed(2)}`);
+        }
+        else if (shape === 'rectangle') {
+            let wRect = paramValues.width, hRect = paramValues.height;
+            let scale = Math.min(innerW / wRect, innerH / hRect) * 0.8;
+            let drawW = wRect * scale, drawH = hRect * scale;
+            let startX = (innerW - drawW) / 2;
+            let startY = (innerH - drawH) / 2;
+            ctx.strokeRect(startX, startY, drawW, drawH);
+            ctx.fillRect(startX, startY, drawW, drawH);
+            drawParamLabel(startX + drawW/2, startY - 8, `w = ${paramValues.width.toFixed(2)}`);
+            drawParamLabel(startX - 12, startY + drawH/2, `h = ${paramValues.height.toFixed(2)}`, -20);
+        }
+        else if (shape === 'circle') {
+            let r = paramValues.radius;
+            let scale = Math.min(innerW / (2*r), innerH / (2*r)) * 0.8;
+            let drawR = r * scale;
+            let centerX = innerW/2, centerY = innerH/2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, drawR, 0, 2*Math.PI);
+            ctx.stroke();
+            ctx.fill();
+            drawParamLabel(centerX + drawR/1.4, centerY - drawR/2, `r = ${paramValues.radius.toFixed(2)}`);
+        }
+        else if (shape === 'triangle') {
+            let base = paramValues.base, heightTri = paramValues.altitude;
+            let scale = Math.min(innerW / base, innerH / heightTri) * 0.8;
+            let drawBase = base * scale;
+            let drawHeight = heightTri * scale;
+            let leftX = (innerW - drawBase) / 2;
+            let baseY = innerH/2 + drawHeight/2;
+            let topX = leftX + drawBase/2;
+            let topY = baseY - drawHeight;
+            ctx.beginPath();
+            ctx.moveTo(leftX, baseY);
+            ctx.lineTo(leftX + drawBase, baseY);
+            ctx.lineTo(topX, topY);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+            drawParamLabel(leftX + drawBase/2, baseY + 18, `b = ${paramValues.base.toFixed(2)}`);
+            drawParamLabel(topX + 8, topY - 8, `h = ${paramValues.altitude.toFixed(2)}`);
+        }
+        else if (shape === 'parallelogram') {
+            let base = paramValues.base, heightP = paramValues.height, side = paramValues.sideA;
+            let offset = Math.sqrt(Math.max(1, side*side - heightP*heightP));
+            if (side <= heightP) offset = heightP * 0.3;
+            let scale = Math.min(innerW / (base + offset), innerH / heightP) * 0.8;
+            let drawBase = base * scale;
+            let drawHeight = heightP * scale;
+            let drawOffset = offset * scale;
+            let startX = (innerW - (drawBase + drawOffset)) / 2;
+            let baseY = (innerH + drawHeight) / 2;
+            let p1 = {x: startX, y: baseY};
+            let p2 = {x: startX + drawBase, y: baseY};
+            let p3 = {x: startX + drawBase - drawOffset, y: baseY - drawHeight};
+            let p4 = {x: startX - drawOffset, y: baseY - drawHeight};
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.lineTo(p3.x, p3.y);
+            ctx.lineTo(p4.x, p4.y);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+            drawParamLabel(p1.x + drawBase/2, baseY + 18, `b = ${paramValues.base.toFixed(2)}`);
+            drawParamLabel(p3.x + drawOffset/2, p3.y - 10, `h = ${paramValues.height.toFixed(2)}`);
+        }
+        else if (shape === 'ellipse') {
+            let a = paramValues.aAxis, b = paramValues.bAxis;
+            let scale = Math.min(innerW / (2*a), innerH / (2*b)) * 0.8;
+            let drawA = a * scale, drawB = b * scale;
+            let centerX = innerW/2, centerY = innerH/2;
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, drawA, drawB, 0, 0, 2*Math.PI);
+            ctx.stroke();
+            ctx.fill();
+            drawParamLabel(centerX + drawA/1.6, centerY - drawB/2, `a = ${paramValues.aAxis.toFixed(2)}`);
+            drawParamLabel(centerX - drawA/1.6, centerY + drawB/2, `b = ${paramValues.bAxis.toFixed(2)}`);
+        }
+        else if (shape === 'trapezoid') {
+            let top = paramValues.topBase, bot = paramValues.bottomBase, hTrap = paramValues.trapHeight;
+            let scale = Math.min(innerW / Math.max(top, bot), innerH / hTrap) * 0.8;
+            let drawTop = top * scale, drawBot = bot * scale, drawH = hTrap * scale;
+            let startY = (innerH - drawH) / 2;
+            let baseY = startY + drawH;
+            let centerX = innerW/2;
+            let leftTop = centerX - drawTop/2, rightTop = centerX + drawTop/2;
+            let leftBot = centerX - drawBot/2, rightBot = centerX + drawBot/2;
+            ctx.beginPath();
+            ctx.moveTo(leftBot, baseY);
+            ctx.lineTo(rightBot, baseY);
+            ctx.lineTo(rightTop, startY);
+            ctx.lineTo(leftTop, startY);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+            drawParamLabel(centerX, baseY + 18, `B = ${paramValues.bottomBase.toFixed(2)}`);
+            drawParamLabel(centerX, startY - 8, `t = ${paramValues.topBase.toFixed(2)}`);
+            drawParamLabel(rightBot - 20, startY + drawH/2, `h = ${paramValues.trapHeight.toFixed(2)}`);
+        }
+        else if (shape === 'semicircle') {
+            let r = paramValues.radius;
+            let scale = Math.min(innerW / (2*r), innerH / r) * 0.7;
+            let drawR = r * scale;
+            let centerX = innerW/2, centerY = innerH/2 + drawR*0.2; // place flat base a bit lower
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, drawR, 0, Math.PI, true);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+            drawParamLabel(centerX + drawR/1.5, centerY - drawR/2, `r = ${paramValues.radius.toFixed(2)}`);
+            // indicate flat diameter
+            ctx.beginPath();
+            ctx.moveTo(centerX - drawR, centerY);
+            ctx.lineTo(centerX + drawR, centerY);
+            ctx.strokeStyle = '#2b4a73';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+
+    // update visual reference badges (with 2 decimals)
+    function updateVisualReference() {
+        syncParamsFromInputs();
+        let shape = currentShape;
+        let html = '';
+
+        if (shape === 'square') {
+            html = `<div><i>s</i> side = ${paramValues.side.toFixed(2)}</div>`;
+        } else if (shape === 'rectangle') {
+            html = `<div><i>w</i> width = ${paramValues.width.toFixed(2)}</div><div><i>h</i> height = ${paramValues.height.toFixed(2)}</div>`;
+        } else if (shape === 'circle') {
+            html = `<div><i>r</i> radius = ${paramValues.radius.toFixed(2)}</div>`;
+        } else if (shape === 'triangle') {
+            html = `<div><i>b</i> base = ${paramValues.base.toFixed(2)}</div><div><i>h</i> height = ${paramValues.altitude.toFixed(2)}</div>`;
+        } else if (shape === 'parallelogram') {
+            html = `<div><i>b</i> base = ${paramValues.base.toFixed(2)}</div><div><i>h</i> height = ${paramValues.height.toFixed(2)}</div><div><i>a</i> ≈ ${paramValues.sideA.toFixed(2)}</div>`;
+        } else if (shape === 'ellipse') {
+            html = `<div><i>a</i> = ${paramValues.aAxis.toFixed(2)}</div><div><i>b</i> = ${paramValues.bAxis.toFixed(2)}</div>`;
+        } else if (shape === 'trapezoid') {
+            html = `<div><i>B</i> = ${paramValues.bottomBase.toFixed(2)}</div><div><i>t</i> = ${paramValues.topBase.toFixed(2)}</div><div><i>h</i> = ${paramValues.trapHeight.toFixed(2)}</div>`;
+        } else if (shape === 'semicircle') {
+            html = `<div><i>r</i> radius = ${paramValues.radius.toFixed(2)}</div>`;
+        }
+        visualParamRef.innerHTML = html || '<div>📐 parameters</div>';
+    }
+
+    function fullUpdate() {
+        updateResult();
+        updateVisualReference();
+        drawScaledShape();
+    }
+
+    // ----- event listeners -----
+    shapeBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            setActiveShape(e.target.dataset.shape);
+            fullUpdate();
+        });
+    });
+
+    calculateBtn.addEventListener('click', fullUpdate);
+
+    paramArea.addEventListener('input', (e) => {
+        if (e.target.matches('input[type=number]')) {
+            updateVisualReference();
+            drawScaledShape();
+            updateResult();   // also update result live for convenience
+        }
+    });
+
+    // init
+    setActiveShape('square');
+    // set consistent defaults
+    paramValues = { side:5, width:6, height:4, base:6, sideA:5, radius:4, altitude:3.5, aAxis:5, bAxis:3, topBase:4, bottomBase:7, trapHeight:3.5 };
+    rebuildParamForm();
+    fullUpdate();
+})();
+</script>
+</body>
+</html>
