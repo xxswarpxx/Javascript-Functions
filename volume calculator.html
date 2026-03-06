@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📐 Volume calculator – common shapes</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+    }
+    body {
+      background: linear-gradient(145deg, #f5f7fe 0%, #e9ecf7 100%);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 2.5rem;
+      box-shadow: 0 25px 40px -10px rgba(0, 20, 40, 0.25), inset 0 0 0 1px rgba(255,255,255,0.6);
+      padding: 2.5rem 2rem;
+      width: 90%;
+      max-width: 600px;
+      transition: all 0.2s;
+    }
+    h1 {
+      font-weight: 600;
+      font-size: 2.2rem;
+      letter-spacing: -0.5px;
+      color: #0a1a2f;
+      margin: 0 0 0.4rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    h1 span {
+      background: #1e2f4b;
+      color: white;
+      font-size: 0.9rem;
+      padding: 0.2rem 1rem;
+      border-radius: 40px;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+    }
+    .sub {
+      color: #2f405c;
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+      border-left: 3px solid #4f6f9f;
+      padding-left: 1rem;
+    }
+    label {
+      font-weight: 500;
+      color: #0e2a44;
+      display: block;
+      margin-top: 0.8rem;
+      font-size: 0.95rem;
+    }
+    select, input[type="number"] {
+      background: white;
+      border: 1px solid #bdc7db;
+      border-radius: 40px;
+      padding: 0.8rem 1.4rem;
+      font-size: 1rem;
+      width: 100%;
+      outline: none;
+      transition: 0.15s;
+      margin-top: 0.3rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    select {
+      appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23333" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 1.2rem center;
+      background-size: 1.2rem;
+      cursor: pointer;
+      font-weight: 500;
+      color: #111e2e;
+    }
+    select:hover, input[type="number"]:hover {
+      border-color: #7a8eb0;
+    }
+    select:focus, input[type="number"]:focus {
+      border-color: #1e3b5c;
+      box-shadow: 0 0 0 3px rgba(30, 59, 92, 0.15);
+    }
+    .input-group {
+      background: #f8faff;
+      border-radius: 2rem;
+      padding: 1.8rem 1.8rem 1.5rem 1.8rem;
+      margin: 1.8rem 0 1.5rem 0;
+      border: 1px solid #d3deef;
+    }
+    .shape-inputs {
+      transition: 0.2s;
+    }
+    .shape-inputs label {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      justify-content: space-between;
+      margin-top: 0.9rem;
+    }
+    .shape-inputs label:first-of-type {
+      margin-top: 0;
+    }
+    .shape-inputs input {
+      width: 140px;
+      flex-shrink: 0;
+    }
+    button {
+      background: #0e2a44;
+      border: none;
+      color: white;
+      font-weight: 600;
+      font-size: 1.2rem;
+      padding: 1rem 2rem;
+      border-radius: 60px;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
+      box-shadow: 0 10px 18px -8px #0a1f33;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    button:hover {
+      background: #1a3d62;
+      transform: scale(1.01);
+      box-shadow: 0 15px 25px -8px #091e30;
+    }
+    button:active {
+      background: #0b233b;
+      transform: scale(0.98);
+    }
+    .result-box {
+      background: #d9e3f5;
+      border-radius: 60px;
+      padding: 1rem 2rem;
+      margin-top: 1.8rem;
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #0a1a2f;
+      border: 1px solid white;
+      word-break: break-word;
+    }
+    .result-box span {
+      font-weight: 300;
+      color: #1f3b5c;
+    }
+    .note {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #4c6085;
+      margin-top: 1rem;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #b7c6e0;
+      margin: 1.2rem 0 0.2rem 0;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>🧊 volume<span>common 3D shapes</span></h1>
+  <div class="sub">choose a shape → enter dimensions → instant result</div>
+
+  <!-- Shape selector -->
+  <label for="shapeSelect">🔽 I want the volume of a:</label>
+  <select id="shapeSelect">
+    <option value="cube" selected>⬛ Cube</option>
+    <option value="rect">🧱 Rectangular prism (box)</option>
+    <option value="sphere">⚪ Sphere</option>
+    <option value="cylinder">🥫 Cylinder</option>
+    <option value="cone">🎩 Cone</option>
+    <option value="pyramid">🔺 Square pyramid</option>
+  </select>
+
+  <!-- Dynamic input area -->
+  <div class="input-group" id="inputGroup">
+    <!-- cube inputs -->
+    <div id="cube-inputs" class="shape-inputs">
+      <label>Side length (a) <input type="number" id="cube-side" step="any" value="3.0" placeholder="e.g. 5"></label>
+    </div>
+    <!-- rectangular prism inputs -->
+    <div id="rect-inputs" class="shape-inputs" style="display: none;">
+      <label>Length (l) <input type="number" id="rect-length" step="any" value="4.0" placeholder="length"></label>
+      <label>Width (w) <input type="number" id="rect-width" step="any" value="2.5" placeholder="width"></label>
+      <label>Height (h) <input type="number" id="rect-height" step="any" value="3.0" placeholder="height"></label>
+    </div>
+    <!-- sphere inputs -->
+    <div id="sphere-inputs" class="shape-inputs" style="display: none;">
+      <label>Radius (r) <input type="number" id="sphere-radius" step="any" value="2.0" placeholder="radius"></label>
+    </div>
+    <!-- cylinder inputs -->
+    <div id="cylinder-inputs" class="shape-inputs" style="display: none;">
+      <label>Radius (r) <input type="number" id="cylinder-radius" step="any" value="2.0" placeholder="radius"></label>
+      <label>Height (h) <input type="number" id="cylinder-height" step="any" value="5.0" placeholder="height"></label>
+    </div>
+    <!-- cone inputs -->
+    <div id="cone-inputs" class="shape-inputs" style="display: none;">
+      <label>Radius (r) <input type="number" id="cone-radius" step="any" value="1.8" placeholder="radius"></label>
+      <label>Height (h) <input type="number" id="cone-height" step="any" value="4.0" placeholder="height"></label>
+    </div>
+    <!-- pyramid inputs (square base) -->
+    <div id="pyramid-inputs" class="shape-inputs" style="display: none;">
+      <label>Base side (a) <input type="number" id="pyramid-side" step="any" value="3.0" placeholder="side"></label>
+      <label>Height (h) <input type="number" id="pyramid-height" step="any" value="4.5" placeholder="height"></label>
+    </div>
+  </div>
+
+  <!-- Calculate button & result -->
+  <button id="calculateBtn">📏 calculate volume</button>
+  <div class="result-box">
+    <span>volume = </span><span id="resultValue">27.0000</span>
+  </div>
+  <hr>
+  <div class="note">all dimensions are in any unit — result in cubic units</div>
+</div>
+
+<script>
+  (function() {
+    // ----- get all DOM elements -----
+    const shapeSelect = document.getElementById('shapeSelect');
+    const inputDivs = document.querySelectorAll('.shape-inputs');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const resultSpan = document.getElementById('resultValue');
+
+    // references to every input field (for auto‑calculate on input)
+    const allNumberInputs = document.querySelectorAll('input[type=number]');
+
+    // ----- helper: show only the div that matches selected shape -----
+    function showActiveInputs(shape) {
+      inputDivs.forEach(div => {
+        div.style.display = 'none';
+      });
+      const activeDiv = document.getElementById(shape + '-inputs');
+      if (activeDiv) {
+        activeDiv.style.display = 'block';
+      }
+    }
+
+    // ----- core volume calculation -----
+    function calculateVolume() {
+      const shape = shapeSelect.value;
+      let volume = null;           // will stay null if validation fails
+      let valid = true;
+
+      // parse values safely, return false if not a positive number
+      function getPositive(id) {
+        const val = parseFloat(document.getElementById(id)?.value);
+        return (val && val > 0) ? val : NaN;
+      }
+
+      switch (shape) {
+        case 'cube': {
+          const side = getPositive('cube-side');
+          if (!isNaN(side)) volume = Math.pow(side, 3);
+          else valid = false;
+          break;
+        }
+        case 'rect': {
+          const l = getPositive('rect-length');
+          const w = getPositive('rect-width');
+          const h = getPositive('rect-height');
+          if (!isNaN(l) && !isNaN(w) && !isNaN(h)) volume = l * w * h;
+          else valid = false;
+          break;
+        }
+        case 'sphere': {
+          const r = getPositive('sphere-radius');
+          if (!isNaN(r)) volume = (4/3) * Math.PI * Math.pow(r, 3);
+          else valid = false;
+          break;
+        }
+        case 'cylinder': {
+          const r = getPositive('cylinder-radius');
+          const h = getPositive('cylinder-height');
+          if (!isNaN(r) && !isNaN(h)) volume = Math.PI * Math.pow(r, 2) * h;
+          else valid = false;
+          break;
+        }
+        case 'cone': {
+          const r = getPositive('cone-radius');
+          const h = getPositive('cone-height');
+          if (!isNaN(r) && !isNaN(h)) volume = (1/3) * Math.PI * Math.pow(r, 2) * h;
+          else valid = false;
+          break;
+        }
+        case 'pyramid': {
+          const base = getPositive('pyramid-side');
+          const h = getPositive('pyramid-height');
+          if (!isNaN(base) && !isNaN(h)) volume = (1/3) * Math.pow(base, 2) * h;
+          else valid = false;
+          break;
+        }
+        default: valid = false;
+      }
+
+      // display result or error message
+      if (valid && volume !== null) {
+        // round to 4 decimal places if needed, but avoid scientific notation for huge numbers
+        resultSpan.textContent = Number.isFinite(volume) ? volume.toFixed(4) : '∞';
+      } else {
+        resultSpan.textContent = '❌ invalid (enter positive numbers)';
+      }
+    }
+
+    // ----- event listeners -----
+    // 1) shape dropdown changes → show corresponding inputs
+    shapeSelect.addEventListener('change', function(e) {
+      showActiveInputs(e.target.value);
+      calculateVolume();        // immediately recalc with new shape (using default numbers)
+    });
+
+    // 2) click on calculate button
+    calculateBtn.addEventListener('click', calculateVolume);
+
+    // 3) any input change → recalc automatically (feel free, it's handy)
+    allNumberInputs.forEach(input => {
+      input.addEventListener('input', calculateVolume);
+    });
+
+    // ----- initialisation: show correct inputs & compute default volume -----
+    showActiveInputs(shapeSelect.value);  // 'cube' by default
+    calculateVolume();                    // shows 27 (3^3) from default cube side = 3
+
+    // tiny extra: if any input becomes negative or empty, error message appears automatically
+  })();
+</script>
+</body>
+</html>
