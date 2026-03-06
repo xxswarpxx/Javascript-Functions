@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🖱️ drag vertices · set exact edge lengths · undo (ctrl+Z)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #eef2f8;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .app-container {
+            max-width: 1000px;
+            width: 100%;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 3rem;
+            padding: 2rem 2rem 2.5rem;
+            box-shadow: 0 30px 50px -20px #1b334b;
+            border: 1px solid rgba(255,255,255,0.7);
+        }
+        h1 {
+            font-weight: 600;
+            font-size: 2rem;
+            margin: 0 0 0.2rem 0;
+            color: #0f2a41;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        h1 .badge {
+            background: #2b4b73;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 400;
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+        }
+        .sub {
+            color: #254b70;
+            margin-bottom: 1.2rem;
+            background: #e2ecfd;
+            padding: 0.5rem 1.5rem;
+            border-radius: 40px;
+            display: inline-block;
+            font-size: 0.95rem;
+        }
+        .canvas-panel {
+            background: #ffffffdb;
+            border-radius: 2rem;
+            padding: 20px;
+            box-shadow: 0 8px 18px rgba(0,20,40,0.1);
+            border: 1px solid white;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: #fbfdff;
+            border-radius: 20px;
+            cursor: crosshair;
+            border: 2px solid white;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+            touch-action: none;
+        }
+        .toolbar-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0 15px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 550;
+            color: #14273e;
+            border: 1px solid #b9cee8;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+        .btn:hover {
+            background: #e2ecfd;
+            border-color: #7f9ec7;
+            transform: scale(0.98);
+        }
+        .scale-unit-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: #eef4fc;
+            padding: 8px 20px;
+            border-radius: 60px;
+            border: 1px solid white;
+            align-items: center;
+        }
+        .scale-unit-box label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .scale-unit-box input {
+            width: 70px;
+            padding: 6px 10px;
+            border-radius: 40px;
+            border: 1px solid #a5bcdb;
+            background: white;
+            text-align: center;
+        }
+        .scale-unit-box select {
+            padding: 6px 12px;
+            border-radius: 40px;
+            border: 1px solid #a5bcdb;
+            background: white;
+            cursor: pointer;
+        }
+        .edge-length-panel {
+            background: #eef4fc;
+            border-radius: 60px;
+            padding: 12px 25px;
+            margin: 10px 0 15px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            border: 1px solid white;
+        }
+        .edge-length-panel label {
+            font-weight: 500;
+            color: #1d3f5e;
+        }
+        .edge-length-panel input {
+            width: 120px;
+            padding: 8px 15px;
+            border-radius: 40px;
+            border: 1px solid #7f9ec7;
+            background: white;
+            font-weight: 500;
+            text-align: center;
+        }
+        .edge-length-panel input:disabled {
+            background: #dae2f0;
+            color: #4e6580;
+            border-color: #b0c3df;
+        }
+        .stats {
+            background: #dae6f8;
+            border-radius: 60px;
+            padding: 15px 30px;
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #0e2740;
+            border: 1px solid white;
+            margin: 10px 0 0;
+        }
+        .stats span:first-child {
+            font-weight: 300;
+            color: #1f4a73;
+        }
+        .footnote {
+            margin-top: 18px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #3b6085;
+        }
+        .vertex-count {
+            background: #1f3f60;
+            color: white;
+            padding: 4px 18px;
+            border-radius: 60px;
+        }
+        .keyhint {
+            background: #dae2f0;
+            padding: 4px 16px;
+            border-radius: 60px;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <h1>🖱️ draw & adjust <span class="badge">drag vertices · set edge length</span></h1>
+    <div class="sub">▼ click canvas to add · drag a vertex · click an edge → type exact length · <kbd>ctrl+Z</kbd> undo</div>
+
+    <div class="canvas-panel">
+        <canvas id="polyCanvas" width="800" height="450"></canvas>
+    </div>
+
+    <div class="toolbar-row">
+        <div class="btn-group">
+            <button class="btn" id="clearBtn">🧽 clear all</button>
+            <button class="btn" id="undoBtn">↩️ undo (ctrl+Z)</button>
+        </div>
+        <div class="scale-unit-box">
+            <label>📏 1 pixel = <input type="number" id="scaleInput" value="1.0" step="0.01" min="0.001"></label>
+            <label>🌎 unit <select id="unitSelect">
+                <option value="cm" selected>cm</option>
+                <option value="m">m</option>
+                <option value="inch">inch</option>
+                <option value="ft">ft</option>
+            </select></label>
+        </div>
+    </div>
+
+    <!-- edge length editor (appears when an edge is selected) -->
+    <div class="edge-length-panel" id="edgePanel">
+        <label>✏️ selected edge length</label>
+        <input type="number" id="edgeLengthInput" value="" step="any" placeholder="—" disabled>
+        <span id="edgeUnit">cm</span>
+        <span style="color:#1f4a73; margin-left:auto;">click on an edge to activate</span>
+    </div>
+
+    <!-- area display -->
+    <div class="stats">
+        <span>📐 area = </span><span id="areaValue">0.00</span> <span id="unitSq">cm²</span>
+    </div>
+
+    <div class="footnote">
+        <span class="vertex-count" id="pointCount">0 vertices</span>
+        <span class="keyhint">💡 drag vertex · click edge → set exact length</span>
+    </div>
+</div>
+
+<script>
+(function() {
+    // --- canvas setup ---
+    const canvas = document.getElementById('polyCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 800; canvas.height = 450;
+
+    // --- state ---
+    let points = [];                // array of {x, y} in pixel coordinates
+    let scale = 1.0;                // cm per pixel
+    let currentUnit = 'cm';         // display unit
+
+    // conversion factors to cm
+    const unitToCm = { cm:1, m:100, inch:2.54, ft:30.48 };
+
+    // dragging state
+    let draggedVertexIndex = null;
+    let dragOffsetX = 0, dragOffsetY = 0;
+    let isDragging = false;
+
+    // selected edge (indices start and end)
+    let selectedEdge = null; // { startIdx, endIdx }
+
+    // history for undo (stores copies of points array)
+    let historyStack = [];
+    const MAX_HISTORY = 50;
+
+    // --- DOM elements ---
+    const clearBtn = document.getElementById('clearBtn');
+    const undoBtn = document.getElementById('undoBtn');
+    const scaleInput = document.getElementById('scaleInput');
+    const unitSelect = document.getElementById('unitSelect');
+    const edgeLengthInput = document.getElementById('edgeLengthInput');
+    const edgeUnitSpan = document.getElementById('edgeUnit');
+    const areaValueSpan = document.getElementById('areaValue');
+    const unitSqSpan = document.getElementById('unitSq');
+    const pointCountSpan = document.getElementById('pointCount');
+
+    // --- helper functions (unit conversion) ---
+    function cmToDisplay(cm) { return cm / unitToCm[currentUnit]; }
+    function displayToCm(disp) { return disp * unitToCm[currentUnit]; }
+    function pixelToCm(pix) { return pix * scale; }
+    function cmToPixel(cm) { return cm / scale; }
+
+    // --- save current state to history (for undo) ---
+    function pushHistory() {
+        // deep copy of points
+        const snapshot = points.map(p => ({ x: p.x, y: p.y }));
+        historyStack.push(snapshot);
+        if (historyStack.length > MAX_HISTORY) historyStack.shift();
+    }
+
+    // --- undo: restore last state ---
+    function undo() {
+        if (historyStack.length === 0) return;
+        points = historyStack.pop().map(p => ({ x: p.x, y: p.y }));
+        // clear selection and dragging
+        selectedEdge = null;
+        draggedVertexIndex = null;
+        edgeLengthInput.disabled = true;
+        edgeLengthInput.value = '';
+        fullSync();
+    }
+
+    // --- redraw canvas ---
+    function redraw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // light grid
+        ctx.strokeStyle = '#dde3ef';
+        ctx.lineWidth = 0.6;
+        for (let i = 0; i < canvas.width; i += 25) {
+            ctx.beginPath();
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i, canvas.height);
+            ctx.strokeStyle = '#d2dcee';
+            ctx.stroke();
+        }
+        for (let i = 0; i < canvas.height; i += 25) {
+            ctx.beginPath();
+            ctx.moveTo(0, i);
+            ctx.lineTo(canvas.width, i);
+            ctx.stroke();
+        }
+
+        if (points.length === 0) return;
+
+        // draw polygon
+        ctx.beginPath();
+        ctx.strokeStyle = '#1f4b7a';
+        ctx.lineWidth = 3;
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i].x, points[i].y);
+        }
+        if (points.length >= 3) {
+            ctx.lineTo(points[0].x, points[0].y);
+        }
+        ctx.stroke();
+
+        // draw vertices
+        for (let i = 0; i < points.length; i++) {
+            ctx.beginPath();
+            ctx.fillStyle = '#123456';
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = 'white';
+            ctx.arc(points[i].x, points[i].y, 7, 0, 2*Math.PI);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.beginPath();
+            ctx.fillStyle = '#f0f7ff';
+            ctx.arc(points[i].x, points[i].y, 4, 0, 2*Math.PI);
+            ctx.fill();
+            // vertex number
+            ctx.font = 'bold 10px monospace';
+            ctx.fillStyle = '#132b42';
+            ctx.fillText(i+1, points[i].x + 10, points[i].y - 8);
+        }
+
+        // highlight first vertex
+        if (points.length > 0) {
+            ctx.beginPath();
+            ctx.strokeStyle = '#e68c4c';
+            ctx.lineWidth = 2.5;
+            ctx.arc(points[0].x, points[0].y, 11, 0, 2*Math.PI);
+            ctx.stroke();
+        }
+
+        // highlight selected edge (if any)
+        if (selectedEdge) {
+            const { startIdx, endIdx } = selectedEdge;
+            if (startIdx >= 0 && endIdx >= 0 && startIdx < points.length && endIdx < points.length) {
+                ctx.beginPath();
+                ctx.strokeStyle = '#f09b43';
+                ctx.lineWidth = 5;
+                ctx.moveTo(points[startIdx].x, points[startIdx].y);
+                ctx.lineTo(points[endIdx].x, points[endIdx].y);
+                ctx.stroke();
+            }
+        }
+    }
+
+    // --- compute area in cm² ---
+    function getAreaCm2() {
+        if (points.length < 3) return 0;
+        let sum = 0;
+        for (let i = 0; i < points.length; i++) {
+            const p1 = points[i];
+            const p2 = points[(i + 1) % points.length];
+            sum += p1.x * p2.y - p2.x * p1.y;
+        }
+        const pixelArea = Math.abs(sum) / 2;
+        return pixelArea * scale * scale;
+    }
+
+    // --- update area display and point count ---
+    function updateArea() {
+        const areaCm2 = getAreaCm2();
+        const factor = unitToCm[currentUnit];
+        const areaDisplay = areaCm2 / (factor * factor);
+        areaValueSpan.textContent = areaDisplay.toFixed(4);
+        unitSqSpan.textContent = currentUnit + '²';
+        pointCountSpan.textContent = points.length + (points.length === 1 ? ' vertex' : ' vertices');
+    }
+
+    // --- update edge length input when an edge is selected ---
+    function updateEdgeInput() {
+        if (!selectedEdge) {
+            edgeLengthInput.disabled = true;
+            edgeLengthInput.value = '';
+            return;
+        }
+        const { startIdx, endIdx } = selectedEdge;
+        if (startIdx < 0 || endIdx < 0 || startIdx >= points.length || endIdx >= points.length) {
+            selectedEdge = null;
+            edgeLengthInput.disabled = true;
+            edgeLengthInput.value = '';
+            return;
+        }
+        const p1 = points[startIdx];
+        const p2 = points[endIdx];
+        const pixelDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        const cmDist = pixelDist * scale;
+        const displayDist = cmToDisplay(cmDist);
+        edgeLengthInput.disabled = false;
+        edgeLengthInput.value = displayDist.toFixed(4);
+        edgeUnitSpan.textContent = currentUnit;
+    }
+
+    // --- full sync: redraw + update area + update edge input ---
+    function fullSync() {
+        redraw();
+        updateArea();
+        updateEdgeInput();
+    }
+
+    // --- point-line distance for edge selection ---
+    function distanceToSegment(px, py, x1, y1, x2, y2) {
+        const A = px - x1;
+        const B = py - y1;
+        const C = x2 - x1;
+        const D = y2 - y1;
+        const dot = A * C + B * D;
+        const len_sq = C * C + D * D;
+        let param = len_sq === 0 ? -1 : dot / len_sq;
+        let xx, yy;
+        if (param < 0) { xx = x1; yy = y1; }
+        else if (param > 1) { xx = x2; yy = y2; }
+        else { xx = x1 + param * C; yy = y1 + param * D; }
+        const dx = px - xx;
+        const dy = py - yy;
+        return Math.hypot(dx, dy);
+    }
+
+    // --- handle canvas mouse down for dragging or edge selection ---
+    function handleMouseDown(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
+
+        // check if clicking near a vertex (distance < 12)
+        let vertexHit = -1;
+        for (let i = 0; i < points.length; i++) {
+            const d = Math.hypot(mouseX - points[i].x, mouseY - points[i].y);
+            if (d < 12) {
+                vertexHit = i;
+                break;
+            }
+        }
+
+        if (vertexHit !== -1) {
+            // start dragging this vertex
+            draggedVertexIndex = vertexHit;
+            const v = points[vertexHit];
+            dragOffsetX = v.x - mouseX;
+            dragOffsetY = v.y - mouseY;
+            isDragging = true;
+            // clear edge selection
+            selectedEdge = null;
+            edgeLengthInput.disabled = true;
+            edgeLengthInput.value = '';
+            e.preventDefault();
+            return;
+        }
+
+        // check if clicking near an edge (distance < 8)
+        if (points.length >= 2) {
+            let bestEdge = null;
+            let bestDist = 15; // threshold
+            for (let i = 0; i < points.length; i++) {
+                const j = (i + 1) % points.length; // for closed polygon, consider last edge to first
+                const d = distanceToSegment(mouseX, mouseY, points[i].x, points[i].y, points[j].x, points[j].y);
+                if (d < bestDist) {
+                    bestDist = d;
+                    bestEdge = { startIdx: i, endIdx: j };
+                }
+            }
+            if (bestEdge) {
+                selectedEdge = bestEdge;
+                fullSync(); // updates edge input and highlights
+                e.preventDefault();
+                return;
+            }
+        }
+
+        // if no vertex/edge hit, add a new point (but not if we are dragging)
+        if (!isDragging) {
+            // clamp to canvas
+            const x = Math.min(canvas.width-2, Math.max(2, mouseX));
+            const y = Math.min(canvas.height-2, Math.max(2, mouseY));
+            pushHistory(); // save before adding
+            points.push({ x, y });
+            selectedEdge = null; // clear selection
+            fullSync();
+        }
+    }
+
+    // --- mouse move for dragging ---
+    function handleMouseMove(e) {
+        if (!isDragging || draggedVertexIndex === null) return;
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
+
+        // update vertex position (clamped)
+        let newX = mouseX + dragOffsetX;
+        let newY = mouseY + dragOffsetY;
+        newX = Math.min(canvas.width-2, Math.max(2, newX));
+        newY = Math.min(canvas.height-2, Math.max(2, newY));
+
+        points[draggedVertexIndex].x = newX;
+        points[draggedVertexIndex].y = newY;
+
+        // clear edge selection while dragging
+        if (selectedEdge) {
+            selectedEdge = null;
+            edgeLengthInput.disabled = true;
+            edgeLengthInput.value = '';
+        }
+
+        // redraw and update area (but no history push until mouse up)
+        redraw();
+        updateArea();
+        // edge input not shown
+    }
+
+    // --- mouse up: end dragging, push history ---
+    function handleMouseUp(e) {
+        if (isDragging) {
+            isDragging = false;
+            draggedVertexIndex = null;
+            pushHistory(); // save after drag
+            fullSync(); // ensure everything consistent
+        }
+    }
+
+    // --- handle edge length input change ---
+    function onEdgeLengthChange() {
+        if (!selectedEdge) return;
+        const { startIdx, endIdx } = selectedEdge;
+        if (startIdx < 0 || endIdx < 0 || startIdx >= points.length || endIdx >= points.length) return;
+
+        let newDisplayLen = parseFloat(edgeLengthInput.value);
+        if (isNaN(newDisplayLen) || newDisplayLen <= 0) {
+            // revert to current length
+            updateEdgeInput();
+            return;
+        }
+
+        // convert to cm and then to pixel distance
+        const newCm = displayToCm(newDisplayLen);
+        const newPixelDist = newCm / scale;
+        if (newPixelDist <= 0) return;
+
+        // get current edge vector
+        const pStart = points[startIdx];
+        const pEnd = points[endIdx];
+        const dx = pEnd.x - pStart.x;
+        const dy = pEnd.y - pStart.y;
+        const currentDist = Math.hypot(dx, dy);
+        if (currentDist < 1e-6) return; // degenerate
+
+        // scale the vector to new length, move end vertex
+        const ratio = newPixelDist / currentDist;
+        const newEndX = pStart.x + dx * ratio;
+        const newEndY = pStart.y + dy * ratio;
+
+        // clamp to canvas
+        points[endIdx].x = Math.min(canvas.width-2, Math.max(2, newEndX));
+        points[endIdx].y = Math.min(canvas.height-2, Math.max(2, newEndY));
+
+        pushHistory(); // record change
+        fullSync(); // updates area and edge input
+    }
+
+    // --- set up event listeners ---
+    canvas.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    // touch events (simplified)
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        if (!touch) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const touchX = (touch.clientX - rect.left) * scaleX;
+        const touchY = (touch.clientY - rect.top) * scaleY;
+        // same as mousedown but we just add point (dragging on touch would be too complex)
+        const x = Math.min(canvas.width-2, Math.max(2, touchX));
+        const y = Math.min(canvas.height-2, Math.max(2, touchY));
+        pushHistory();
+        points.push({ x, y });
+        selectedEdge = null;
+        fullSync();
+    }, { passive: false });
+
+    // --- clear all ---
+    clearBtn.addEventListener('click', () => {
+        pushHistory();
+        points = [];
+        selectedEdge = null;
+        draggedVertexIndex = null;
+        fullSync();
+    });
+
+    // --- undo button ---
+    undoBtn.addEventListener('click', undo);
+
+    // --- global ctrl+Z ---
+    window.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'z') {
+            e.preventDefault();
+            undo();
+        }
+    });
+
+    // --- scale change ---
+    scaleInput.addEventListener('input', () => {
+        let newScale = parseFloat(scaleInput.value);
+        if (isNaN(newScale) || newScale <= 0) newScale = 1.0;
+        scale = newScale;
+        fullSync(); // updates area and edge input
+    });
+
+    // --- unit change ---
+    unitSelect.addEventListener('change', () => {
+        currentUnit = unitSelect.value;
+        fullSync(); // updates edge input and area unit
+    });
+
+    // --- edge length input change ---
+    edgeLengthInput.addEventListener('change', onEdgeLengthChange);
+
+    // --- initial default triangle ---
+    points = [
+        { x: 200, y: 150 },
+        { x: 500, y: 120 },
+        { x: 350, y: 350 }
+    ];
+    pushHistory(); // initial state saved
+    fullSync();
+})();
+</script>
+</body>
+</html>

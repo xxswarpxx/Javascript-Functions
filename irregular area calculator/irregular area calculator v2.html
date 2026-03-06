@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✏️ precision irregular area · draw + edit coordinates in any unit</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #ecf0f7;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .app-container {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 3rem;
+            padding: 2rem 2rem 2.5rem;
+            box-shadow: 0 30px 50px -20px #1a2f44;
+            border: 1px solid rgba(255,255,255,0.7);
+        }
+        h1 {
+            font-weight: 600;
+            font-size: 2rem;
+            margin: 0 0 0.2rem 0;
+            color: #0f2a41;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        h1 .badge {
+            background: #2b4b73;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 400;
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+        }
+        .sub {
+            color: #254b70;
+            margin-bottom: 1.2rem;
+            font-size: 0.95rem;
+            background: #e2ecfd;
+            padding: 0.5rem 1.5rem;
+            border-radius: 40px;
+            display: inline-block;
+        }
+        .canvas-panel {
+            background: #ffffffdb;
+            border-radius: 2rem;
+            padding: 20px;
+            box-shadow: 0 8px 18px rgba(0,20,40,0.1);
+            border: 1px solid white;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: #fbfdff;
+            border-radius: 20px;
+            cursor: crosshair;
+            border: 2px solid white;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+            touch-action: none;
+        }
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0 20px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .btn {
+            background: white;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 50px;
+            font-weight: 550;
+            color: #14273e;
+            border: 1px solid #b9cee8;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn:hover {
+            background: #e2ecfd;
+            border-color: #7f9ec7;
+            transform: scale(0.98);
+        }
+        .scale-unit-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: #eef4fc;
+            padding: 8px 20px;
+            border-radius: 60px;
+            border: 1px solid white;
+            align-items: center;
+        }
+        .scale-box, .unit-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .scale-box input {
+            width: 80px;
+            padding: 8px 10px;
+            border-radius: 40px;
+            border: 1px solid #a5bcdb;
+            background: white;
+            text-align: center;
+            font-weight: 500;
+        }
+        .unit-box select {
+            padding: 8px 16px;
+            border-radius: 40px;
+            border: 1px solid #a5bcdb;
+            background: white;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .coord-table-container {
+            background: #eef4fc;
+            border-radius: 28px;
+            padding: 20px;
+            margin: 20px 0 15px;
+            border: 1px solid white;
+            max-height: 260px;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th {
+            text-align: left;
+            padding: 10px 6px;
+            color: #1e3f60;
+            font-weight: 600;
+            background: #dae6f8;
+            border-radius: 20px 20px 0 0;
+        }
+        td {
+            padding: 8px 6px;
+            border-bottom: 1px solid #c1d4ed;
+        }
+        td input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 30px;
+            border: 1px solid #9cb3d3;
+            background: white;
+            font-weight: 500;
+        }
+        td input:focus {
+            outline: 2px solid #1e4d7a;
+        }
+        .stats {
+            background: #dae6f8;
+            border-radius: 60px;
+            padding: 15px 30px;
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #0e2740;
+            border: 1px solid white;
+            margin: 10px 0 0;
+        }
+        .stats span:first-child {
+            font-weight: 300;
+            color: #1f4a73;
+        }
+        .footnote {
+            margin-top: 18px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #3b6085;
+        }
+        .vertex-count {
+            background: #1f3f60;
+            color: white;
+            padding: 4px 18px;
+            border-radius: 60px;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <h1>📐 draw & adjust <span class="badge">exact measurements · any unit</span></h1>
+    <div class="sub">▼ click on canvas → then edit coordinates in table (cm / m / in / ft)</div>
+
+    <!-- canvas -->
+    <div class="canvas-panel">
+        <canvas id="polyCanvas" width="800" height="450"></canvas>
+    </div>
+
+    <!-- toolbar with scale + unit -->
+    <div class="toolbar">
+        <div class="btn-group">
+            <button class="btn" id="clearBtn">🧽 clear all</button>
+            <button class="btn" id="undoBtn">↩️ undo last</button>
+            <button class="btn" id="addPointBtn">➕ add vertex (0,0)</button>
+        </div>
+        <div class="scale-unit-area">
+            <div class="scale-box">
+                <label>📏 1 pixel =</label>
+                <input type="number" id="scaleInput" value="1.0" step="0.01" min="0.001">
+            </div>
+            <div class="unit-box">
+                <label>🌎 unit:</label>
+                <select id="unitSelect">
+                    <option value="cm" selected>cm</option>
+                    <option value="m">m</option>
+                    <option value="inch">inch</option>
+                    <option value="ft">ft</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- editable coordinate table -->
+    <div class="coord-table-container">
+        <table id="coordTable">
+            <thead>
+                <tr><th>#</th><th>X (in chosen unit)</th><th>Y (in chosen unit)</th></tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- filled dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- live area result -->
+    <div class="stats" id="areaDisplay">
+        <span>📐 area = </span><span id="areaValue">0.00</span> <span id="unitSq">cm²</span>
+    </div>
+
+    <div class="footnote">
+        <span class="vertex-count" id="pointCount">0 vertices</span>
+        <span>✏️ edit table cells to set exact coordinates · area auto‑updates</span>
+    </div>
+</div>
+
+<script>
+(function() {
+    // ---------- canvas ----------
+    const canvas = document.getElementById('polyCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 800; canvas.height = 450;
+
+    // ---------- state ----------
+    let points = [];                // pixel coordinates {x, y}
+    let scale = 1.0;                // cm per pixel (base internal unit = cm)
+    let currentUnit = 'cm';         // display unit
+
+    // conversion factors to cm
+    const unitToCm = {
+        cm: 1,
+        m: 100,
+        inch: 2.54,
+        ft: 30.48
+    };
+
+    // ---------- DOM elements ----------
+    const clearBtn = document.getElementById('clearBtn');
+    const undoBtn = document.getElementById('undoBtn');
+    const addPointBtn = document.getElementById('addPointBtn');
+    const scaleInput = document.getElementById('scaleInput');
+    const unitSelect = document.getElementById('unitSelect');
+    const tableBody = document.getElementById('tableBody');
+    const areaValueSpan = document.getElementById('areaValue');
+    const unitSqSpan = document.getElementById('unitSq');
+    const pointCountSpan = document.getElementById('pointCount');
+
+    // ---------- helper: cm to display unit ----------
+    function cmToDisplay(cmVal) {
+        return cmVal / unitToCm[currentUnit];
+    }
+
+    // display unit to cm
+    function displayToCm(displayVal) {
+        return displayVal * unitToCm[currentUnit];
+    }
+
+    // pixel to cm
+    function pixelToCm(pixel) {
+        return pixel * scale;
+    }
+
+    // cm to pixel
+    function cmToPixel(cm) {
+        return cm / scale;
+    }
+
+    // ---------- redraw canvas ----------
+    function redraw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // light grid
+        ctx.strokeStyle = '#dde3ef';
+        ctx.lineWidth = 0.6;
+        for (let i = 0; i < canvas.width; i += 25) {
+            ctx.beginPath();
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i, canvas.height);
+            ctx.strokeStyle = '#d2dcee';
+            ctx.stroke();
+        }
+        for (let i = 0; i < canvas.height; i += 25) {
+            ctx.beginPath();
+            ctx.moveTo(0, i);
+            ctx.lineTo(canvas.width, i);
+            ctx.stroke();
+        }
+
+        if (points.length === 0) return;
+
+        // draw polygon
+        ctx.beginPath();
+        ctx.strokeStyle = '#1f4b7a';
+        ctx.lineWidth = 3;
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i].x, points[i].y);
+        }
+        if (points.length >= 3) {
+            ctx.lineTo(points[0].x, points[0].y);
+        }
+        ctx.stroke();
+
+        // vertices
+        for (let i = 0; i < points.length; i++) {
+            ctx.beginPath();
+            ctx.fillStyle = '#123456';
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = 'white';
+            ctx.arc(points[i].x, points[i].y, 7, 0, 2*Math.PI);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.beginPath();
+            ctx.fillStyle = '#f0f7ff';
+            ctx.arc(points[i].x, points[i].y, 4, 0, 2*Math.PI);
+            ctx.fill();
+            // small index
+            ctx.font = 'bold 10px monospace';
+            ctx.fillStyle = '#132b42';
+            ctx.fillText(i+1, points[i].x + 10, points[i].y - 8);
+        }
+
+        // highlight first
+        if (points.length > 0) {
+            ctx.beginPath();
+            ctx.strokeStyle = '#e68c4c';
+            ctx.lineWidth = 2.5;
+            ctx.arc(points[0].x, points[0].y, 11, 0, 2*Math.PI);
+            ctx.stroke();
+        }
+    }
+
+    // ---------- compute area in cm² (using pixel coordinates and scale) ----------
+    function getAreaCm2() {
+        if (points.length < 3) return 0;
+        let sum = 0;
+        for (let i = 0; i < points.length; i++) {
+            const p1 = points[i];
+            const p2 = points[(i + 1) % points.length];
+            sum += p1.x * p2.y - p2.x * p1.y;
+        }
+        const pixelArea = Math.abs(sum) / 2;
+        // each pixel area corresponds to (scale cm)²
+        return pixelArea * scale * scale;
+    }
+
+    // ---------- update area display and point count ----------
+    function updateArea() {
+        const areaCm2 = getAreaCm2();
+        // convert to display unit squared
+        const factor = unitToCm[currentUnit];
+        const areaDisplay = areaCm2 / (factor * factor);
+        areaValueSpan.textContent = areaDisplay.toFixed(4);
+        unitSqSpan.textContent = currentUnit + '²';
+
+        pointCountSpan.textContent = points.length + (points.length === 1 ? ' vertex' : ' vertices');
+    }
+
+    // ---------- rebuild table from points (converting to display unit) ----------
+    function renderTable() {
+        let html = '';
+        points.forEach((p, index) => {
+            const cmX = pixelToCm(p.x);
+            const cmY = pixelToCm(p.y);
+            const dispX = cmToDisplay(cmX).toFixed(4);
+            const dispY = cmToDisplay(cmY).toFixed(4);
+            html += `<tr>
+                <td>${index+1}</td>
+                <td><input type="number" class="coord-input" data-index="${index}" data-axis="x" value="${dispX}" step="any"></td>
+                <td><input type="number" class="coord-input" data-index="${index}" data-axis="y" value="${dispY}" step="any"></td>
+            </tr>`;
+        });
+        tableBody.innerHTML = html;
+
+        // attach event listeners
+        document.querySelectorAll('.coord-input').forEach(input => {
+            input.addEventListener('change', function(e) {
+                const idx = parseInt(this.dataset.index);
+                const axis = this.dataset.axis;
+                let newDisplayVal = parseFloat(this.value);
+                if (isNaN(newDisplayVal)) newDisplayVal = 0;
+
+                // convert display value -> cm -> pixel
+                const newCm = displayToCm(newDisplayVal);
+                let newPixel = cmToPixel(newCm);
+                // clamp to canvas boundaries (optional)
+                if (axis === 'x') newPixel = Math.min(canvas.width-2, Math.max(2, newPixel));
+                else newPixel = Math.min(canvas.height-2, Math.max(2, newPixel));
+
+                // update point
+                if (idx >= 0 && idx < points.length) {
+                    if (axis === 'x') points[idx].x = newPixel;
+                    else points[idx].y = newPixel;
+                }
+
+                // refresh canvas & area
+                redraw();
+                updateArea();
+                // table will be out of sync due to clamping, re-render to show actual values
+                renderTable();
+            });
+        });
+    }
+
+    // ---------- sync table after any external change (clear, undo, add, canvas click) ----------
+    function fullSync() {
+        redraw();
+        updateArea();
+        renderTable();
+    }
+
+    // ---------- canvas click (add point) ----------
+    function handleCanvasClick(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        // clamp
+        const clampedX = Math.min(canvas.width-2, Math.max(2, x));
+        const clampedY = Math.min(canvas.height-2, Math.max(2, y));
+
+        // optional: detect click near first point to close? we skip for simplicity (just add)
+        points.push({ x: clampedX, y: clampedY });
+        fullSync();
+    }
+    canvas.addEventListener('click', handleCanvasClick);
+    // touch support
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        if (!touch) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (touch.clientX - rect.left) * scaleX;
+        const y = (touch.clientY - rect.top) * scaleY;
+        points.push({ x: Math.min(canvas.width-2, Math.max(2, x)), y: Math.min(canvas.height-2, Math.max(2, y)) });
+        fullSync();
+    }, { passive: false });
+
+    // ---------- clear ----------
+    clearBtn.addEventListener('click', () => {
+        points = [];
+        fullSync();
+    });
+
+    // ---------- undo ----------
+    undoBtn.addEventListener('click', () => {
+        points.pop();
+        fullSync();
+    });
+
+    // ---------- add point at (0,0) in current unit (converted to pixels) ----------
+    addPointBtn.addEventListener('click', () => {
+        // (0,0) in current unit -> cm = 0 -> pixel = 0 (but we clamp to 2)
+        const cmX = 0, cmY = 0;
+        let pixelX = cmToPixel(cmX);
+        let pixelY = cmToPixel(cmY);
+        pixelX = Math.min(canvas.width-2, Math.max(2, pixelX));
+        pixelY = Math.min(canvas.height-2, Math.max(2, pixelY));
+        points.push({ x: pixelX, y: pixelY });
+        fullSync();
+    });
+
+    // ---------- scale change ----------
+    scaleInput.addEventListener('input', () => {
+        let newScale = parseFloat(scaleInput.value);
+        if (isNaN(newScale) || newScale <= 0) newScale = 1.0;
+        scale = newScale;
+        // pixel coordinates unchanged, but table values (cm) change => re-render table
+        updateArea();
+        renderTable();   // shows new converted values
+        redraw();        // canvas same, but area updated
+    });
+
+    // ---------- unit change ----------
+    unitSelect.addEventListener('change', () => {
+        currentUnit = unitSelect.value;
+        // just re-render table with new unit conversion, area label changes
+        renderTable();
+        updateArea();  // updates label
+    });
+
+    // ---------- initial render ----------
+    // start with a default triangle (to demo)
+    points = [
+        { x: 200, y: 150 },
+        { x: 500, y: 120 },
+        { x: 350, y: 350 }
+    ];
+    fullSync();
+
+    // ensure scale input is synced
+    scaleInput.value = scale;
+
+})();
+</script>
+</body>
+</html>
